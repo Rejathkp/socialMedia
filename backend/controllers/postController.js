@@ -52,12 +52,21 @@ export const addComment = async (req, res) => {
 
 export const getFeed = async (req, res) => {
   try {
+    // Find the current user and populate their following list
     const currentUser = await User.findById(req.user.id).populate("following");
-    const posts = await Post.find({ user: { $in: currentUser.following } })
-      .populate("user", "username")
-      .sort({ createdAt: -1 });
+
+    // Get the list of IDs: followers + current user
+    const userIds = currentUser.following.map(followingUser => followingUser._id);
+    userIds.push(req.user.id); // Include the current user's ID
+
+    // Fetch posts by the current user or their followers
+    const posts = await Post.find({ user: { $in: userIds } })
+      .populate("user", "username") // Populate user details for each post
+      .sort({ createdAt: -1 }); // Sort posts by most recent
+
     res.status(200).json(posts);
   } catch (error) {
+    console.error("Error fetching feed:", error);
     res.status(500).json({ error: "Error fetching feed" });
   }
 };

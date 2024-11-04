@@ -28,20 +28,25 @@ const Login = () => {
   const onSubmit = async (data) => {
     setIsSubmitting(true);
     setErrMsg("");
-
+  
     try {
-      const response = await axios.post("http://localhost:4000/api/login", data); 
-      dispatch(UserLogin(response.data)); 
+      const response = await axios.post("http://localhost:4000/api/login", data);
       
-      
-      navigate("/"); 
-
+      const token = response.data.token; // Get token from response
+      if (token) {
+        localStorage.setItem("token", token); // Save token to localStorage
+        dispatch(UserLogin(response.data)); // Update Redux state with user data
+        navigate("/"); // Redirect to home page
+      } else {
+        setErrMsg("Login failed. No token received.");
+      }
     } catch (error) {
       setErrMsg(error.response?.data?.message || "Login failed. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
   };
+  
 
   return (
     <div className='bg-bgColor w-full h-[100vh] flex items-center justify-center p-6'>
